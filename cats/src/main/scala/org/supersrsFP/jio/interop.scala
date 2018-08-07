@@ -7,7 +7,6 @@ import scala.util.control.NonFatal
 
 object interop {
 
-
   implicit val jioSync: Sync[JIO] = new Sync[JIO] {
     override def suspend[A](thunk: => JIO[A]): JIO[A] =
       try thunk
@@ -20,7 +19,7 @@ object interop {
     override def raiseError[A](e: Throwable): JIO[A] = JIO.raiseError(e)
 
     override def handleErrorWith[A](fa: JIO[A])(
-      f: Throwable => JIO[A]): JIO[A] =
+        f: Throwable => JIO[A]): JIO[A] =
       fa.handleErrorWith(f)
 
     override def pure[A](x: A): JIO[A] = JIO.pure(x)
