@@ -99,7 +99,25 @@ public class JIOMain {
 ```
 
 ## LULZIO IS THE GREATEST OF IO MONADS. JUST LOOK AT THESE BENCH RESULTS
+```
+[info] Benchmark                                                           (depth)   Mode  Cnt      Score      Error  Units
+[info] supersrsFP.lulzio.IODeepAttemptBenchmark.catsDeepAttempt               1000  thrpt    3  14124.150 ± 2398.464  ops/s
+[info] supersrsFP.lulzio.IODeepAttemptBenchmark.futureDeepAttempt             1000  thrpt    3   4571.254 ± 1136.555  ops/s
+[info] supersrsFP.lulzio.IODeepAttemptBenchmark.jioDeepAttempt                1000  thrpt    3  5 BILLION ± 1643.094  ops/s
+[info] supersrsFP.lulzio.IODeepAttemptBenchmark.lulzDeepAttempt               1000  thrpt    3  5 BILLION ±  810.932  ops/s
+[info] supersrsFP.lulzio.IODeepAttemptBenchmark.monixDeepAttempt              1000  thrpt    3  13687.391 ±  716.555  ops/s
+[info] supersrsFP.lulzio.IODeepAttemptBenchmark.scalazDeepAttempt             1000  thrpt    3  53748.552 ± 3312.606  ops/s
+[info] supersrsFP.lulzio.IODeepAttemptBenchmark.scalazDeepAttemptBaseline     1000  thrpt    3  15489.390 ±  492.409  ops/s
+[info] supersrsFP.lulzio.IODeepAttemptBenchmark.thunkDeepAttempt              1000  thrpt    3  10438.052 ± 1238.573  ops/s
+[info] supersrsFP.lulzio.IODeepFlatMapBenchmark.catsDeepFlatMap                 20  thrpt    3   1646.821 ±  389.195  ops/s
+[info] supersrsFP.lulzio.IODeepFlatMapBenchmark.futureDeepFlatMap               20  thrpt    3     48.282 ±   68.365  ops/s
+[info] supersrsFP.lulzio.IODeepFlatMapBenchmark.javaDeepFlatMap                 20  thrpt    3  5 BILLION ±   45.315  ops/s
+[info] supersrsFP.lulzio.IODeepFlatMapBenchmark.lulzDeepFlatMap                 20  thrpt    3  5 BILLION ±  459.516  ops/s
+[info] supersrsFP.lulzio.IODeepFlatMapBenchmark.monixDeepFlatMap                20  thrpt    3   1491.573 ±  304.076  ops/s
+[info] supersrsFP.lulzio.IODeepFlatMapBenchmark.scalazDeepFlatMap               20  thrpt    3   1656.152 ±  519.860  ops/s
+[info] supersrsFP.lulzio.IODeepFlatMapBenchmark.thunkDeepFlatMap                20  thrpt    3   1753.555 ±  350.969  ops/s
 
+```
 
 ## USE ZIO TODAY AND THROW YOUR WORRIES AWAY
 
