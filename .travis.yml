@@ -1,0 +1,9 @@
+language: scala
+scala:
+  - 2.12.2
+
+ghc:
+  - "8.4.1"
+
+script:
+  - ./build.sh

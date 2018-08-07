@@ -1,3 +1,5 @@
 #!/usr/bin/env bash
 
-ghc -o lulzio-compiler compiler.hs -O2 -fexcess-precision -optc-O3 -optc-ffast-math
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+
+ghc -o "$DIR/lulzio-compiler" "$DIR/compiler.hs" -O2 -fexcess-precision -optc-O3 -optc-ffast-math
