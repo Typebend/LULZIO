@@ -11,3 +11,13 @@ lazy val root = (project in file("."))
       "com.github.alexarchambault" %% "scalacheck-shapeless_1.13" % "1.1.8" % "test"
     )
   )
+
+lazy val benches = (project in file("benches"))
+  .settings(
+    resolvers += Resolver.sonatypeRepo("snapshots"),
+    libraryDependencies ++= Seq(
+      "org.scalaz" %% "scalaz-zio" % "0.1-SNAPSHOT",
+      "io.monix" %% "monix" % "3.0.0-RC1"
+    )
+  ).dependsOn(root)
+  .enablePlugins(JmhPlugin)

@@ -14,54 +14,54 @@ import org.typelevel.discipline.Laws
 
 import scala.util.control.NonFatal
 
-class WowSuchLAWS
-    extends FunSuite
+class JIOLAWS
+  extends FunSuite
     with Matchers
     with Checkers
     with Discipline
     with TestInstances {
 
-  implicit def cogenTask[A]: Cogen[LULZIO[A]] =
+  implicit def cogenTask[A]: Cogen[JIO[A]] =
     Cogen[Unit].contramap(_ => ()) // YOLO
 
-  implicit def catsEQ[A](implicit E: Eq[A]): Eq[LULZIO[A]] =
-    new Eq[LULZIO[A]] {
+  implicit def catsEQ[A](implicit E: Eq[A]): Eq[JIO[A]] =
+    new Eq[JIO[A]] {
 
-      def eqv(x: LULZIO[A], y: LULZIO[A]): Boolean =
-        x.attempt.unsafeRunKek() === y.attempt.unsafeRunKek()
+      def eqv(x: JIO[A], y: JIO[A]): Boolean =
+        x.attempt.unsafeRunSync() === y.attempt.unsafeRunSync()
     }
 
   implicit def arbitraryIO[A](implicit A: Arbitrary[A],
-                              CG: Cogen[A]): Arbitrary[LULZIO[A]] = {
+    CG: Cogen[A]): Arbitrary[JIO[A]] = {
     import Arbitrary._
-    def genPure: Gen[LULZIO[A]] =
-      arbitrary[A].map(LULZIO.pure)
+    def genPure: Gen[JIO[A]] =
+      arbitrary[A].map(JIO.pure[A](_))
 
-    def genFail: Gen[LULZIO[A]] =
-      arbitrary[Throwable].map(LULZIO.raiseError)
+    def genFail: Gen[JIO[A]] =
+      arbitrary[Throwable].map(JIO.raiseError(_))
 
-    def genBindSuspend: Gen[LULZIO[A]] =
-      arbitrary[A].map(LULZIO.delay(_).flatMap(LULZIO(_)))
+    def genBindSuspend: Gen[JIO[A]] =
+      arbitrary[A].map(SJIO(_).flatMap(SJIO.pure(_)))
 
-    def genSimpleTask: Gen[LULZIO[A]] = Gen.frequency(
+    def genSimpleTask: Gen[JIO[A]] = Gen.frequency(
       1 -> genPure,
       1 -> genFail,
       1 -> genBindSuspend
     )
 
-    def genFlatMap: Gen[LULZIO[A]] =
+    def genFlatMap: Gen[JIO[A]] =
       for {
         ioa <- genSimpleTask
-        f <- arbitrary[A => LULZIO[A]]
-      } yield ioa.flatMap(f)
+        f <- arbitrary[A => JIO[A]]
+      } yield ioa.flatMap[A](f)
 
-    def getMapOne: Gen[LULZIO[A]] =
+    def getMapOne: Gen[JIO[A]] =
       for {
         ioa <- genSimpleTask
         f <- arbitrary[A => A]
       } yield ioa.map(f)
 
-    def getMapTwo: Gen[LULZIO[A]] =
+    def getMapTwo: Gen[JIO[A]] =
       for {
         ioa <- genSimpleTask
         f1 <- arbitrary[A => A]
@@ -79,7 +79,8 @@ class WowSuchLAWS
       )
     )
   }
+  import SJIO.jioSync
 
-  checkAll("Sync[LULZIO]", SyncTests[LULZIO].sync[Int, Int, Int])
+  checkAll("Sync[JIO]", SyncTests[JIO].sync[Int, Int, Int])
 
 }
