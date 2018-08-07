@@ -3,7 +3,10 @@ lazy val root = (project in file("."))
     organization := "org.supersrsFP",
     name := "lulzio",
     version := "0.0.1-SNAPSHOT",
-    scalaVersion := "2.12.6"
+    scalaVersion := "2.12.6",
+    scalacOptions ++= Seq(
+      // "-Wall" For some reason, this doesn't work here. might be bug in ghc
+    )
   )
 
 lazy val cats = (project in file("cats"))
