@@ -47,14 +47,23 @@ sealed abstract class LULZIO[A] {
       case Left(t)  => f(t)
     }
 
-  def unsafeRunKek(): A = LULZIO.unsafeRunKek(this)
+  def unsafeRunKek(): A = LULZIO.unsafeRunKek (this)
 
   final def unsafeRunSync(): A = LULZIO.unsafeRunKek(this)
 
   def tag: Int
+
+  protected def unsafePerformStep(stack: Discount,
+                                        firstBind: BindBox,
+                                        aHandler: Is,
+                                        ret: Box): Scala
 }
 
 object LULZIO {
+
+  case class Box(var a: Any = null)
+
+  case class BindBox(var bind: Is = null)
 
   final object Tags {
     final val Bind = 0
@@ -85,9 +94,53 @@ object LULZIO {
 
   private[lulzio] case class PureBoi[A](f: A) extends LULZIO[A] {
     override def tag: Int = Tags.Strict
+
+    override protected def unsafePerformStep(stack: Discount,
+                                                   firstBind: BindBox,
+                                                   aHandler: Is,
+                                                   ret: Box): Scala = {
+      val expr = if ((firstBind.bind ne null) && (firstBind.bind ne aHandler)){
+        firstBind.bind(f)
+      } else {
+        var c: Scala = null
+        while ((c eq null) && !stack.isEmpty) {
+          c = stack.pop().asInstanceOf[Is](f)
+        }
+        if (c eq null) {
+          ret.a = f
+        }
+        c
+      }
+
+      firstBind.bind = null
+      expr
+    }
   }
   private[lulzio] case class SuchDelay[A](f: () => A) extends LULZIO[A] {
     override def tag: Int = Tags.Effect
+
+    override protected def unsafePerformStep(stack: Discount,
+                                                   firstBind: BindBox,
+                                                   aHandler: Is,
+                                                   ret: Box) = {
+      try {
+        ret.a = f()
+        val expr: Scala = if ((firstBind.bind ne null) && (firstBind.bind ne aHandler)) {
+          firstBind.bind(ret.a)
+        } else {
+          var c: Scala = null
+          while ((c eq null) && !stack.isEmpty) {
+            c = stack.pop().asInstanceOf[Is](ret.a)
+          }
+          c
+        }
+        firstBind.bind = null
+        expr
+      } catch {
+        case e: Throwable if !e.isInstanceOf[VirtualMachineError] =>
+          OHSHIT(e)
+      }
+    }
   }
   private[lulzio] case class MuchMap[A, B](old: LULZIO[A], f: A => B)
       extends LULZIO[B]
@@ -98,20 +151,72 @@ object LULZIO {
 
     override def toString(): String =
       s"Map(${old.toString}, <function1>)"
+
+    override protected def unsafePerformStep(stack: Discount,
+                                                   firstBind: BindBox,
+                                                   aHandler: Is,
+                                                   ret: Box): Scala = {
+      if (firstBind.bind ne null) {
+        stack.push(firstBind.bind)
+      }
+      firstBind.bind = this.asInstanceOf[Is]
+      old.asInstanceOf[Scala]
+    }
   }
   private[lulzio] case class SoBind[A, B](old: LULZIO[A], f: A => LULZIO[B])
       extends LULZIO[B] {
     override def tag: Int = Tags.Bind
+
+    override protected def unsafePerformStep(stack: Discount,
+                                                   firstBind: BindBox,
+                                                   aHandler: Is,
+                                                   ret: Box) = {
+      if (firstBind.bind ne null)
+        stack.push(firstBind.bind)
+      firstBind.bind = f.asInstanceOf[Is]
+      old.asInstanceOf[Scala]
+    }
   }
   private[lulzio] case class OHSHIT[A](t: Throwable) extends LULZIO[A] {
     override def tag: Int = Tags.Failed
+
+    override protected def unsafePerformStep(stack: Discount,
+                                                   firstBind: BindBox,
+                                                   aHandler: Is,
+                                                   ret: Box): Scala = {
+      val handler =
+        if ((firstBind.bind ne null) && (firstBind.bind eq AttemptHandler))
+          AttemptHandler
+        else {
+          var h: Is = null
+          while (!stack.isEmpty && (h eq null)) {
+            if (stack.pop() eq AttemptHandler)
+              h = AttemptHandler
+          }
+          h
+        }
+      firstBind.bind = null
+
+      if (handler eq null)
+        throw t
+      else {
+        var c: Scala = null
+        while ((c eq null) && !stack.isEmpty) {
+          c = stack.pop().asInstanceOf[Is](Left(t))
+        }
+        if (c eq null) {
+          ret.a = Left(t)
+        }
+        c
+      }
+    }
   }
 
   final def suspend[A](a: => LULZIO[A]): LULZIO[A] =
     try a
     catch { case NonFatal(e) => OHSHIT(e) }
 
-  private[LULZIO] val AttemptHandler: Any => LULZIO[Either[Throwable, Any]] =
+  private[LULZIO] val AttemptHandler: Is =
     a => PureBoi(Right(a))
 
   type Scala = LULZIO[Any]
@@ -119,96 +224,14 @@ object LULZIO {
   type Discount = IOLinkedArrayQueue
   type Haskell[A] = A => LULZIO[Either[Throwable, A]]
 
-  final def findAttemptHandler(bFirst: Is, stack: Discount): Haskell[Any] = {
-    if ((bFirst ne null) && (bFirst eq AttemptHandler))
-      AttemptHandler
-    else {
-      var handler: Haskell[Any] = null
-      while (!stack.isEmpty && (handler eq null)) {
-        if (stack.pop() eq AttemptHandler)
-          handler = AttemptHandler
-      }
-      handler
-    }
-  }
-
-  final def unsafeRunKek[A](kek: LULZIO[A]): A = {
-    //Last seen IO
-    var current: LULZIO[Any] = kek.asInstanceOf[LULZIO[Any]]
-    //Do we have a value
-    var inPure: Boolean = false
-    // null values or some sht
-    var kekReturn: Any = null
-    // Something about happy path
-    var firstBind: Is = null
-    // 50% off all stacks
-    val kekStack: Discount = new IOLinkedArrayQueue
-
-    //Put da handler on da stack mon it's alright
-    val Ayylmao = AttemptHandler
-
+  final def unsafeRunKek[A](io: LULZIO[A]): A = {
+    val ret = Box()
+    val stack = new Discount
+    val fbind = BindBox()
+    var kekistan: Scala = io.asInstanceOf[Scala]
     do {
-      current match {
-        case r: PureBoi[Any] @unchecked =>
-          kekReturn = r.f
-          inPure = true
-        case r: SuchDelay[_] =>
-          try {
-            kekReturn = r.f()
-            inPure = true
-          } catch {
-            case NonFatal(e) =>
-              current = OHSHIT(e)
-          }
-        case r: SoBind[Any, Any] @unchecked =>
-          if (firstBind ne null) {
-            kekStack.push(firstBind)
-          }
-          firstBind = r.f
-          current = r.old
-        case m: MuchMap[Any, Any] @unchecked =>
-          if (firstBind ne null) {
-            kekStack.push(firstBind)
-          }
-          firstBind = m
-          current = m.old
-        case OHSHIT(r) =>
-          if (findAttemptHandler(firstBind, kekStack) eq null)
-            throw r
-          else {
-            kekReturn = Left(r)
-            inPure = true
-          }
-          firstBind = null
-      }
-      if (inPure) {
-        nextBind(firstBind, kekStack) match {
-          case null =>
-            current = null
-          case f =>
-            firstBind = null
-            current = try {
-              f(kekReturn)
-            } catch {
-              case e: Throwable if !e.isInstanceOf[VirtualMachineError] =>
-                OHSHIT(e)
-            }
-            inPure = false
-        }
-      }
-    } while (current ne null)
-    kekReturn.asInstanceOf[A]
-  }
-
-  private[this] def nextBind(b1: Is, rest: Discount): Is = {
-    if ((b1 ne null) && (b1 ne AttemptHandler))
-      b1
-    else {
-      var c: Is = null
-      while ((c eq null) && !rest.isEmpty) {
-        c = rest.pop().asInstanceOf[Is]
-      }
-      c
-    }
+      kekistan = kekistan.unsafePerformStep(stack, fbind, AttemptHandler, ret)
+    } while(kekistan ne null)
+    ret.a.asInstanceOf[A]
   }
 }
