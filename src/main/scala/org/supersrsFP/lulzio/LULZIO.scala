@@ -5,7 +5,7 @@ import org.supersrsFP.IOLinkedArrayQueue
 import scala.util.control.NonFatal
 import scala.annotation.switch
 
-sealed abstract class LULZIO[A] {
+abstract class LULZIO[A] {
   import LULZIO._
 
   final def map[B](f: A => B): LULZIO[B] = (this.tag: @switch) match {
