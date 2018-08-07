@@ -1,5 +1,7 @@
 # LULZIO: THE GREATEST IO MONAD
 
+[![Build Status](https://travis-ci.org/jmcardon/LULZIO.svg?branch=master)](https://travis-ci.org/jmcardon/LULZIO)
+
 Have you ever wanted to to write purely functional programs?
 
 Have you ever wanted to not be bogged down by things such as "Asynchrony",
