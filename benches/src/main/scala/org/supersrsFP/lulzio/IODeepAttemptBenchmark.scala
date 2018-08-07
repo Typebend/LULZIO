@@ -4,6 +4,7 @@ package org.supersrsFP.lulzio
 import java.util.concurrent.TimeUnit
 
 import org.openjdk.jmh.annotations._
+import org.supersrsFP.jio._
 import org.supersrsFP.lulzio.IOBenchmarks.{Thunk, unsafeRun, _}
 import scalaz.zio.IO
 

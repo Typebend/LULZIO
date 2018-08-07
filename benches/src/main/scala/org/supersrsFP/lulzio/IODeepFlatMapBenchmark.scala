@@ -2,10 +2,12 @@ package org.supersrsFP.lulzio
 
 
 import java.util.concurrent.TimeUnit
-import org.openjdk.jmh.annotations._
-import scala.concurrent.Await
 
+import org.openjdk.jmh.annotations._
+
+import scala.concurrent.Await
 import IOBenchmarks._
+import org.supersrsFP.jio._
 
 @State(Scope.Thread)
 @BenchmarkMode(Array(Mode.Throughput))

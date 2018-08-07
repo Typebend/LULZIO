@@ -1,33 +1,12 @@
-package org.supersrsFP.lulzio
+package org.supersrsFP.jio
 
 import cats.effect.Sync
-import org.supersrsFP.lulzio.JIO.{DelayJIO, PureJIO}
+import org.supersrsFP.jio.JIO.DelayJIO
 
 import scala.util.control.NonFatal
 
-/** Scala interface to the most politically incorrect
-  * IO monad.
-  *
-  */
-object SJIO {
+object interop {
 
-  def apply[A](a: => A): JIO[A] =
-    new DelayJIO(() => a)
-
-  def delay[A](a: => A): JIO[A] =
-    apply(a)
-
-  def raiseError[A](t: Throwable): JIO[A] =
-    JIO.raiseError(t)
-
-  def pure[A](a: A): JIO[A] =
-    new PureJIO(a)
-
-  def suspend[A](thunk: => JIO[A]): JIO[A] =
-    try thunk
-    catch {
-      case NonFatal(e) => JIO.raiseError(e)
-    }
 
   implicit val jioSync: Sync[JIO] = new Sync[JIO] {
     override def suspend[A](thunk: => JIO[A]): JIO[A] =
@@ -41,7 +20,7 @@ object SJIO {
     override def raiseError[A](e: Throwable): JIO[A] = JIO.raiseError(e)
 
     override def handleErrorWith[A](fa: JIO[A])(
-        f: Throwable => JIO[A]): JIO[A] =
+      f: Throwable => JIO[A]): JIO[A] =
       fa.handleErrorWith(f)
 
     override def pure[A](x: A): JIO[A] = JIO.pure(x)

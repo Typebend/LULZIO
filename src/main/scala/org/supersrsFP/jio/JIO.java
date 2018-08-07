@@ -1,15 +1,23 @@
-package org.supersrsFP.lulzio;
+package org.supersrsFP.jio;
 
-import java.util.function.Function;
-import java.util.function.Supplier;
-
+import org.supersrsFP.IOLinkedArrayQueue;
 import scala.Function0;
+import scala.Function1;
 import scala.util.Either;
 import scala.util.Left;
 import scala.util.Right;
-import scala.Function1;
 
-abstract class JIO<A> {
+import java.util.function.Supplier;
+
+/** So uhh, this should be sealed but java says
+ * "fuck it".
+ *
+ * If you extend this class you support
+ * death of puppies.
+ *
+ * @param <A>
+ */
+public abstract class JIO<A> {
 
     abstract public int tag();
 
@@ -146,7 +154,7 @@ abstract class JIO<A> {
 
         @Override
         final public int tag() {
-            return Tags.Bind;
+            return JIO.Tags.Bind;
         }
     }
 
@@ -163,7 +171,7 @@ abstract class JIO<A> {
 
         @Override
         final public int tag() {
-            return Tags.Pure;
+            return JIO.Tags.Pure;
         }
     }
 
@@ -180,7 +188,7 @@ abstract class JIO<A> {
 
         @Override
         final public int tag() {
-            return Tags.Fail;
+            return JIO.Tags.Fail;
         }
     }
 
@@ -203,12 +211,12 @@ abstract class JIO<A> {
 
         @Override
         public JIO<B> apply(A a) {
-            return new PureJIO<>(f.apply(a));
+            return new JIO.PureJIO<>(f.apply(a));
         }
 
         @Override
         final public int tag() {
-            return Tags.Map;
+            return JIO.Tags.Map;
         }
     }
 
@@ -225,7 +233,7 @@ abstract class JIO<A> {
 
         @Override
         final public int tag() {
-            return Tags.Effect;
+            return JIO.Tags.Effect;
         }
     }
 

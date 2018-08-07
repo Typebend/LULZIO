@@ -1,10 +1,8 @@
 package org.supersrsFP.lulzio
 
-import java.util
+import org.supersrsFP.IOLinkedArrayQueue
 
 import scala.util.control.NonFatal
-import cats.effect.Sync
-
 import scala.annotation.switch
 
 sealed abstract class LULZIO[A] {
@@ -112,29 +110,6 @@ object LULZIO {
   final def suspend[A](a: => LULZIO[A]): LULZIO[A] =
     try a
     catch { case NonFatal(e) => OHSHIT(e) }
-
-  implicit val superSRSSync: Sync[LULZIO] = new Sync[LULZIO] {
-    def suspend[A](thunk: => LULZIO[A]): LULZIO[A] = LULZIO.suspend(thunk)
-
-    override def delay[A](thunk: => A): LULZIO[A] = LULZIO(thunk)
-
-    def raiseError[A](e: Throwable): LULZIO[A] = OHSHIT(e)
-
-    def handleErrorWith[A](fa: LULZIO[A])(
-        f: Throwable => LULZIO[A]): LULZIO[A] =
-      fa.handleErrorWith(f)
-
-    def flatMap[A, B](fa: LULZIO[A])(f: A => LULZIO[B]): LULZIO[B] =
-      fa.flatMap(f)
-
-    def tailRecM[A, B](a: A)(f: A => LULZIO[Either[A, B]]): LULZIO[B] =
-      f(a).flatMap {
-        case Left(l)  => tailRecM(l)(f)
-        case Right(r) => LULZIO(r)
-      }
-
-    def pure[A](x: A): LULZIO[A] = LULZIO.pure(x)
-  }
 
   private[LULZIO] val AttemptHandler: Any => LULZIO[Either[Throwable, Any]] =
     a => PureBoi(Right(a))
