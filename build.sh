@@ -27,7 +27,7 @@ if [ ! -f ./compiler/lulzio-compiler ]; then
 else
   ./compiler/lulzio-compiler
   if [ $? -ne 0 ]; then
-    rm ./compiler/lulzio-compile
+    rm ./compiler/lulzio-compiler
     ./build.sh
   fi
 fi
