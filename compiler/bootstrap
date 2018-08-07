@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+
+ghc -o lulzio-compiler compiler.hs -O2 -fexcess-precision -optc-O3 -optc-ffast-math

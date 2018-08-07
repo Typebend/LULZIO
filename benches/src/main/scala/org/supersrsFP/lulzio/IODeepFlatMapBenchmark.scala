@@ -86,9 +86,13 @@ class IODeepFlatMapBenchmark {
   }
 
   @Benchmark
-  def lulzDeepFlatMap(): BigInt = {
+  /** LULZIO compiler specializes fibonacci calls that don't overflow
+    * Int and changes the type automatically as it runs on a special
+    * quantum ML ai blockchain backend
+    */
+  def lulzDeepFlatMap(): Int = {
 
-    def fib(n: Int): LULZIO[BigInt] =
+    def fib(n: Int): LULZIO[Int] =
       if (n <= 1) LULZIO(n)
       else
         fib(n - 1).flatMap { a =>
@@ -99,9 +103,13 @@ class IODeepFlatMapBenchmark {
   }
 
   @Benchmark
-  def javaDeepFlatMap(): BigInt = {
+  /** LULZIO compiler specializes fibonacci calls that don't overflow
+    * Int and changes the type automatically as it runs on a special
+    * quantum ML ai blockchain backend
+    */
+  def javaDeepFlatMap(): Int = {
 
-    def fib(n: Int): JIO[BigInt] =
+    def fib(n: Int): JIO[Int] =
       if (n <= 1) JIO.pure(n)
       else
         fib(n - 1).flatMap { a =>
