@@ -61,7 +61,7 @@ abstract class LULZIO[A] {
 
 object LULZIO {
 
-  case class Box(var a: Any = null)
+//  case class Box(var a: Any = null)
 
   case class BindBox(var bind: Is = null)
 
@@ -107,7 +107,7 @@ object LULZIO {
           c = stack.pop().asInstanceOf[Is](f)
         }
         if (c eq null) {
-          ret.a = f
+          UnsafeHelper.Unsafe.putObject(ret, UnsafeHelper.boxOffset, f)
         }
         c
       }
@@ -124,13 +124,13 @@ object LULZIO {
                                                    aHandler: Is,
                                                    ret: Box) = {
       try {
-        ret.a = f()
+        UnsafeHelper.Unsafe.putObject(ret, UnsafeHelper.boxOffset, f())
         val expr: Scala = if ((firstBind.bind ne null) && (firstBind.bind ne aHandler)) {
-          firstBind.bind(ret.a)
+          firstBind.bind(ret.getItem)
         } else {
           var c: Scala = null
           while ((c eq null) && !stack.isEmpty) {
-            c = stack.pop().asInstanceOf[Is](ret.a)
+            c = stack.pop().asInstanceOf[Is](ret.getItem)
           }
           c
         }
@@ -205,7 +205,7 @@ object LULZIO {
           c = stack.pop().asInstanceOf[Is](Left(t))
         }
         if (c eq null) {
-          ret.a = Left(t)
+          UnsafeHelper.Unsafe.putObject(ret, UnsafeHelper.boxOffset, Left(t))
         }
         c
       }
@@ -225,13 +225,13 @@ object LULZIO {
   type Haskell[A] = A => LULZIO[Either[Throwable, A]]
 
   final def unsafeRunKek[A](io: LULZIO[A]): A = {
-    val ret = Box()
+    val ret = new Box()
     val stack = new Discount
     val fbind = BindBox()
     var kekistan: Scala = io.asInstanceOf[Scala]
     do {
       kekistan = kekistan.unsafePerformStep(stack, fbind, AttemptHandler, ret)
     } while(kekistan ne null)
-    ret.a.asInstanceOf[A]
+    ret.getItem.asInstanceOf[A]
   }
 }
