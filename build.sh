@@ -19,7 +19,7 @@ if [ ! -f ./compiler/lulzio-compiler ]; then
   else
     echo "No GHC installation found. Proceeding with SLOW, UNOPTIMIZED compiler."
     echo "You really should consider using a more principled build system."
-    echo "I would strongly enocourage you to install the Glasgow Haskell Compiler;"
+    echo "I would strongly encourage you to install the Glasgow Haskell Compiler;"
     echo "Your quality of life will drastically improve, and you'll be able to"
     echo "enjoy OPTIMIZED LULZIO performance."
     sbt compile
